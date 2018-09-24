@@ -1,7 +1,7 @@
 # coding: utf-8
 
-# MC886/MO444 - 2018s2 - Assignment 01
-# Tamara Campos - RA 157324
+# MC886/MO444 - 2018s2 - Assignment 02
+# Tamara Martinelli de Campos - RA 157324
 # João Vítor B. Silva - RA 155951
 
 import sys
@@ -50,7 +50,7 @@ for c in trainX.columns.values:
         validX[c] /= diff
 
 # calculate cost
-m, n = trainData.shape
+m, n = trainX.shape
 r = 10
 it = 100000
 alpha = 0.1
