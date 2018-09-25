@@ -7,6 +7,32 @@
 import sys
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
+
+def sigmoid(z):
+    s = 1.0 / (1.0 + np.exp(-z))
+    return s
+
+# calculates gradient descent
+def gradientDescent(x, y, alpha, n, m, it):
+    xTran = x.transpose()
+    thetas = np.ones(n)
+    J = np.zeros(it)
+
+    for i in range(it):
+        hypothesis = sigmoid(np.dot(x, thetas.T))
+        cost = np.dot(y['label'].values, np.log(hypothesis))
+        cost += np.dot((1 - y['label'].values), np.log(1 - hypothesis))
+        J[i] = ((np.sum(cost)/(-1 * m)))
+
+        diff = hypothesis - y['label'].values
+        gradient = np.squeeze(np.dot(xTran, diff))/m
+        thetas = np.squeeze(thetas - alpha * gradient)
+
+    return J, thetas
+
+
+
 
 ## MAIN
 
@@ -34,23 +60,20 @@ trainY, validY = Y.iloc[10000:], Y.iloc[:10000]
 
 # normalize features
 for c in trainX.columns.values:
-    if(c != 'bias'):
-        max = float(trainX[c].max())
-        min = float(trainX[c].min())
-
-        if (max == min):
-            max = min + 1
-
-        diff = float(max - min)
-
-        trainX[c] -= min
-        trainX[c]  /= diff
-
-        validX[c] -= min
-        validX[c] /= diff
+    if c != 'bias':
+        trainX[c] = trainX[c] / 255.0
+        validX[c] = validX[c] / 255.0
 
 # calculate cost
 m, n = trainX.shape
-r = 10
-it = 100000
+it = 1000
 alpha = 0.1
+
+J, thetas = gradientDescent(trainX.values, trainY, alpha, n, m, it)
+
+# plot graph for GD with regularization
+plt.plot(J, 'blue')
+plt.ylabel('Função de custo J')
+plt.xlabel('Número de iterações')
+plt.title('Logistic Regression')
+plt.show()
