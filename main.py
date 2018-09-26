@@ -22,11 +22,11 @@ def gradientDescent(x, y, alpha, n, m, it):
     for i in range(it):
         hypothesis = sigmoid(np.dot(x, thetas.T))
 
-        cost = np.dot(y['label'].values, np.log(hypothesis + 0.001))
-        cost += np.dot((1 - y['label'].values), np.log(1 - hypothesis + 0.001))
+        cost = np.dot(y, np.log(hypothesis + 0.001))
+        cost += np.dot((1 - y), np.log(1 - hypothesis + 0.001))
         J[i] = ((np.sum(cost)/(-1 * m)))
 
-        diff = hypothesis - y['label'].values
+        diff = hypothesis - y
         gradient = np.squeeze(np.dot(xTran, diff))/m
         thetas = np.squeeze(thetas - alpha * gradient)
 
@@ -65,23 +65,25 @@ for c in trainX.columns.values:
 
 # calculate cost
 m, n = trainX.shape
-it = 200
-alpha = 0.001
+it = 100
+alpha = 0.0001
 
 # 10 iterações, cada uma um i é igual a 1 no mapa
 J, thetas = [], []
 for i in range(10):
     map = {k:v for k, v in zip(range(10), 10*[0])}
     map[i] = 1
-    trainY['label'].map(map)
 
-    J_i, thetas_i = gradientDescent(trainX.values, trainY, alpha, n, m, it)
+    mappedY = trainY['label'].map(map).values
+
+    J_i, thetas_i = gradientDescent(trainX.values, mappedY, alpha, n, m, it)
     J.append(J_i)
     thetas.append(thetas_i)
+    print(np.dot(validX.values, thetas_i))
 
     # plot graph for GD with regularization
-    #plt.plot(J[i], 'blue')
-    #plt.ylabel('Função de custo J')
-    #plt.xlabel('Número de iterações')
-    #plt.title('Logistic Regression')
-    #plt.show()
+    plt.plot(J[i])
+    plt.ylabel('Função de custo J')
+    plt.xlabel('Número de iterações')
+    plt.title('Logistic Regression')
+    plt.show()
