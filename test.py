@@ -1,13 +1,16 @@
-import numpy as np # linear algebra
-import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
-#Plots
-import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score  
-#Advanced optimization
-from scipy import optimize as op
+# coding: utf-8
 
-from sklearn.preprocessing import MinMaxScaler
+# MC886/MO444 - 2018s2 - Assignment 02 - Logistic Regression
+# Tamara Campos - RA 157324
+# João Vítor B. Silva - RA 155951
+
 import sys
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy import optimize as op
+from sklearn.metrics import f1_score
+from sklearn.preprocessing import MinMaxScaler
 
 def sigmoid(z):
     return 1.0 / (1 + np.exp(-z))
@@ -25,7 +28,7 @@ def gradient(theta, X, y):
 
     return ((1 / m) * X.T.dot(h - y))
 
-#Optimal theta 
+#Optimal theta
 def logisticRegression(X, y, theta):
 
     alpha = 0.001
@@ -76,9 +79,7 @@ m, n = trainX.shape
 all_theta = np.zeros((k, n))
 
 #One vs all
-
 J = []
-
 for i in range(10):
     map = {k:v for k, v in zip(range(10), 10*[0])}
     map[i] = 1
@@ -90,19 +91,25 @@ for i in range(10):
     all_theta[i] = optTheta
 
 # plot graph for GD with regularization
-plt.plot(J[0])
-plt.ylabel('Função de custo J')
-plt.xlabel('Número de iterações')
-plt.title('Logistic Regression')
-plt.show()
+# plt.plot(J[0])
+# plt.ylabel('Função de custo J')
+# plt.xlabel('Número de iterações')
+# plt.title('Logistic Regression')
+# plt.show()
 #
 
 #Predictions
 P = sigmoid(validX.dot(all_theta.T)) #probability for each flower
-#print(P)
-print(P)
-#p = [validY[np.argmax(P[i, :])] for i in range(m)]
-#p = [Species[np.argmax(P[i, :])] for i in range(trainX.shape[0])]
 
-#print("Test Accuracy ", accuracy_score(validY, p) * 100 , '%')
+results = []
+for p in P:
+    results.append(np.argmax(p))
 
+"""plt.scatter(results, range(len(results)), color='blue')
+plt.scatter(validY['label'].values, range(len(validY['label'].values)), color='red')
+plt.ylabel('Classe Predita')
+plt.xlabel('Observação')
+plt.title('Predição vs Real')
+plt.show()"""
+
+print("F1 Score:" + str(f1_score(validY['label'].values, results, average='micro')))
