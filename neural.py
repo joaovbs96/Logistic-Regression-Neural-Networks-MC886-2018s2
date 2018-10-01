@@ -32,15 +32,14 @@ def NeuralNetwork(x, y, n, it):
     y = np.reshape(y, (y.shape[0], 1))
     weights1 = np.random.rand(n, n)
     weights2 = np.random.rand(n, 1)
-    J = it * []
 
     for i in range(it):
-        # step 2 - feed forward - slide 41
+        # step 2 - feed forward - slide 41 # TODO: outras funções de ativação
         layer1 = sigmoid(np.dot(x, weights1)) # z = sig(W1x + b1)
         output = sigmoid(np.dot(layer1, weights2)) # y = sig(W2sig(W1x + b1) + b2)
 
         # step 3 - calculate error
-        J[i], _ = loss(x, y, weights1)
+        # TODO
 
         # step 4 - calculate derivative of error
         # 2(y - y') * z(1 - z) * x
@@ -51,11 +50,13 @@ def NeuralNetwork(x, y, n, it):
         d_weights1 = np.dot(x.T, temp)
 
         # steps 5 & 6 - backprop & update the weights with the derivative cost function
-        weights1 += d_weights1 # TODO: confirmar: é soma?
+        weights1 += d_weights1
         weights2 += d_weights2
-        J.append(d_weights2)
 
     # TODO: optimizer function
+
+    layer1 = sigmoid(np.dot(x, weights1))
+    output = sigmoid(np.dot(layer1, weights2))
 
     return output
 
@@ -99,12 +100,21 @@ validX = scaler.transform(validX)
 # n -> number of features
 _, n = trainX.shape
 it = 200
-neural = NeuralNetwork(trainX, trainY['label'].values, n, it)
 
-# TODO: funções de ativação
+#One vs all
+neural = []
+for i in range(10):
+    map = {k:v for k, v in zip(range(10), 10*[0])}
+    map[i] = 1
 
-plt.plot(neural)
-plt.ylabel('Custo')
-plt.xlabel('Número de iterações')
-plt.title('Logistic Regression')
-plt.show()
+    mappedY = trainY['label'].map(map).values
+
+    neural.append(NeuralNetwork(trainX, mappedY, n, it))
+
+results = []
+neural = np.asarray(neural).T
+for n in neural:
+    results.append(np.argmax(n))
+
+print(np.asarray(results).shape)
+print(results)
