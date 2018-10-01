@@ -26,7 +26,7 @@ def loss(X, y, w):
 
     return cost
 
-def NeuralNetwork(x, y, n, it):
+def NeuralNetwork(x, y, n, it, vx):
     # step by step: check slide 68
     # step 1 - random init in [0, 1)
     y = np.reshape(y, (y.shape[0], 1))
@@ -55,7 +55,8 @@ def NeuralNetwork(x, y, n, it):
 
     # TODO: optimizer function
 
-    layer1 = sigmoid(np.dot(x, weights1))
+    # calculte output value
+    layer1 = sigmoid(np.dot(vx, weights1))
     output = sigmoid(np.dot(layer1, weights2))
 
     return output
@@ -109,7 +110,8 @@ for i in range(10):
 
     mappedY = trainY['label'].map(map).values
 
-    neural.append(NeuralNetwork(trainX, mappedY, n, it))
+    neural.append(NeuralNetwork(trainX, mappedY, n, it, validX))
+    print(i)
 
 results = []
 neural = np.asarray(neural).T
@@ -118,3 +120,6 @@ for n in neural:
 
 print(np.asarray(results).shape)
 print(results)
+
+print("F1 Score:" + str(f1_score(validY['label'].values, results, average='micro')))
+print("Acuracy: " + str(accuracy_score(validY['label'].values, results)))
