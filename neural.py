@@ -14,11 +14,69 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
 
 
+# =========================================
+
+def leaky_relu_derivative(z):
+    def do_leaky_deriv(x):
+        if x > 0:
+            return 1
+        else:
+            return 0.01
+
+    relufunc = np.vectorize(do_leaky)
+    return relufunc(z)
+
+
+def leaky_relu(z):
+    def do_leaky(x):
+        if x > 0:
+            return x
+        else:
+            return 0.01 * x
+
+    relufunc = np.vectorize(do_leaky)
+    return relufunc(z)
+
+# =========================================
+
+def relu_derivative(z):
+    def do_relu_deriv(x):
+        if x > 0:
+            return 1
+        else:
+            return 0
+
+    relufunc = np.vectorize(do_relu_deriv)
+    return relufunc(z)
+
+
+def relu(z):
+    def do_relu(x):
+        return max(0, x)
+
+    relufunc = np.vectorize(do_relu)
+    return relufunc(z)
+
+# =========================================
+
+def tanh_derivative(z):
+    return 1.0 - (tanh(z) * tanh(z))
+
+
+def tanh(z):
+    return (np.exp(z) - np.exp(-z)) / (np.exp(z) + np.exp(-z))
+
+# =========================================
+
 def sigmoid_derivative(z):
     return z * (1.0 - z)
 
+
 def sigmoid(z):
     return 1.0 / (1 + np.exp(-z))
+
+# =========================================
+
 
 def loss(h, y):
     m = len(y)
@@ -27,7 +85,7 @@ def loss(h, y):
 
     return cost
 
-def NeuralNetwork(x, y, n, it, vx):
+def NeuralNetwork(x, y, n, it, vx, func, func_deriv):
     # step by step: check slide 68
     # step 1 - random init in [0, 1)
     y = np.reshape(y, (y.shape[0], 1))
@@ -38,8 +96,8 @@ def NeuralNetwork(x, y, n, it, vx):
     J = []
     for i in range(it):
         # step 2 - feed forward - slide 41 # TODO: outras funções de ativação
-        layer1 = sigmoid(np.dot(x, weights1)) # z = sig(W1x + b1)
-        output = sigmoid(np.dot(layer1, weights2)) # y = sig(W2sig(W1x + b1) + b2)
+        layer1 = func(np.dot(x, weights1)) # z = sig(W1x + b1)
+        output = func(np.dot(layer1, weights2)) # y = sig(W2sig(W1x + b1) + b2)
 
         # step 3 - calculate error
         J.append(loss(output, y))
@@ -48,19 +106,19 @@ def NeuralNetwork(x, y, n, it, vx):
         # 2(y - y') * z(1 - z) * x
         #temp = 2 * (y - output) * sigmoid_derivative(output)
         #d_weights2 = np.dot(layer1.T, temp)
-        d_weights2 = (y - output) * sigmoid_derivative(output)
+        d_weights2 = (y - output) * func_deriv(output)
 
         #temp = np.dot(temp, weights2.T) * sigmoid_derivative(layer1)
         #d_weights1 = np.dot(x.T, temp)
-        d_weights1 = d_weights2.dot(weights2.T) * sigmoid_derivative(layer1)
+        d_weights1 = d_weights2.dot(weights2.T) * func_deriv(layer1)
 
         # steps 5 & 6 - backprop & update the weights with the derivative cost function
         weights2 += layer1.T.dot(d_weights2)
         weights1 += x.T.dot(d_weights1)
 
     # calculte output value
-    layer1 = sigmoid(np.dot(vx, weights1))
-    output = sigmoid(np.dot(layer1, weights2))
+    layer1 = func(np.dot(vx, weights1))
+    output = func(np.dot(layer1, weights2))
 
     return output, J
 
@@ -106,58 +164,34 @@ _, n = trainX.shape
 it = 200
 
 #One vs all
-neural, J =  [], []
-for i in range(10):
-    map = {k:v for k, v in zip(range(10), 10*[0])}
-    map[i] = 1
+functions = [tanh, relu, leaky_relu, sigmoid]
+derivatives = [tanh_derivative, relu_derivative, leaky_relu_derivative, sigmoid_derivative]
+for(function in zip(functions, derivatives)):
+    func, func_deriv = function
 
-    mappedY = trainY['label'].map(map).values
+    neural, J =  [], []
+    for i in range(10):
+        map = {k:v for k, v in zip(range(10), 10*[0])}
+        map[i] = 1
 
-    neuralTemp, Jtemp = NeuralNetwork(trainX, mappedY, n, it, validX)
-    neural.append(neuralTemp)
-    J.append(Jtemp)
-    print(i)
+        mappedY = trainY['label'].map(map).values
 
-results = []
-neural = np.asarray(neural).T
-neural = np.squeeze(neural)
+        neuralTemp, Jtemp = NeuralNetwork(trainX, mappedY, n, it, validX, func, func_deriv)
+        neural.append(neuralTemp)
+        J.append(Jtemp)
+        print(i)
 
-print(neural.shape)
-print(neural)
-for n in neural:
-    results.append(np.argmax(n))
+    results = []
+    neural = np.asarray(neural).T
+    neural = np.squeeze(neural)
 
-print(np.asarray(results).shape)
-print(results)
+    print(neural.shape)
+    print(neural)
+    for n in neural:
+        results.append(np.argmax(n))
 
-print("F1 Score: " + str(f1_score(validY['label'].values, results, average='micro')))
-print("Acuracy: " + str(accuracy_score(validY['label'].values, results)))
+    print(np.asarray(results).shape)
+    print(results)
 
-"""
-
-#One vs all
-weights = []
-for i in range(10):
-    map = {k:v for k, v in zip(range(10), 10*[0])}
-    map[i] = 1
-
-    mappedY = trainY['label'].map(map).values
-
-    weights.append(NeuralNetwork(trainX, mappedY, n, it, validX))
-    print(i)
-
-
-weights = np.asarray(weights)
-P = sigmoid(validX.dot(weights.T))
-
-results = []
-print(weights.shape)
-for p in P:
-    results.append(np.argmax(p))
-
-print(np.asarray(results).shape)
-print(results)
-
-print("F1 Score:" + str(f1_score(validY['label'].values, results, average='micro')))
-print("Acuracy: " + str(accuracy_score(validY['label'].values, results)))
-"""
+    print("F1 Score: " + str(f1_score(validY['label'].values, results, average='micro')))
+    print("Acuracy: " + str(accuracy_score(validY['label'].values, results)))
