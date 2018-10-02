@@ -10,6 +10,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.decomposition import PCA
+from sklearn.metrics import f1_score
+from sklearn.metrics import accuracy_score
+
 
 def sigmoid_derivative(z):
     return z * (1.0 - z)
@@ -17,12 +20,10 @@ def sigmoid_derivative(z):
 def sigmoid(z):
     return 1.0 / (1 + np.exp(-z))
 
-def loss(X, y, w):
+def loss(h, y):
     m = len(y)
-    h = sigmoid(X.dot(w)) # confirmar: dot(x, w)?
 
-    cost = (-1 / m) * np.sum(np.sum(y * np.log(h) + (1 - y) * np.log(1 - h), axis=1))
-    # confirmar: soma dupla?
+    cost = (-1 / m) * np.sum(np.sum(y * np.log(h + 0.0001) + (1 - y) * np.log(1 - h + 0.0001), axis=1))
 
     return cost
 
@@ -30,36 +31,38 @@ def NeuralNetwork(x, y, n, it, vx):
     # step by step: check slide 68
     # step 1 - random init in [0, 1)
     y = np.reshape(y, (y.shape[0], 1))
+
     weights1 = np.random.rand(n, n)
     weights2 = np.random.rand(n, 1)
 
+    J = []
     for i in range(it):
         # step 2 - feed forward - slide 41 # TODO: outras funções de ativação
         layer1 = sigmoid(np.dot(x, weights1)) # z = sig(W1x + b1)
         output = sigmoid(np.dot(layer1, weights2)) # y = sig(W2sig(W1x + b1) + b2)
 
         # step 3 - calculate error
-        # TODO
+        J.append(loss(output, y))
 
         # step 4 - calculate derivative of error
         # 2(y - y') * z(1 - z) * x
-        temp = 2 * (y - output) * sigmoid_derivative(output)
-        d_weights2 = np.dot(layer1.T, temp)
+        #temp = 2 * (y - output) * sigmoid_derivative(output)
+        #d_weights2 = np.dot(layer1.T, temp)
+        d_weights2 = (y - output) * sigmoid_derivative(output)
 
-        temp = np.dot(temp, weights2.T) * sigmoid_derivative(layer1)
-        d_weights1 = np.dot(x.T, temp)
+        #temp = np.dot(temp, weights2.T) * sigmoid_derivative(layer1)
+        #d_weights1 = np.dot(x.T, temp)
+        d_weights1 = d_weights2.dot(weights2.T) * sigmoid_derivative(layer1)
 
         # steps 5 & 6 - backprop & update the weights with the derivative cost function
-        weights1 += d_weights1
-        weights2 += d_weights2
-
-    # TODO: optimizer function
+        weights2 += layer1.T.dot(d_weights2)
+        weights1 += x.T.dot(d_weights1)
 
     # calculte output value
     layer1 = sigmoid(np.dot(vx, weights1))
     output = sigmoid(np.dot(layer1, weights2))
 
-    return output
+    return output, J
 
 # MAIN
 
@@ -82,10 +85,10 @@ pca = PCA(.95)
 X = pca.fit_transform(X)
 
 # insert bias
-m, n = X.shape
-temp = np.zeros((m, n + 1))
-temp[:, :-1] = X
-X = temp
+#m, n = X.shape
+#temp = np.zeros((m, n + 1))
+#temp[:, :-1] = X
+#X = temp
 
 # split dataset into train and validation
 trainX, validX = X[10000:], X[:10000]
@@ -103,23 +106,58 @@ _, n = trainX.shape
 it = 200
 
 #One vs all
-neural = []
+neural, J =  [], []
 for i in range(10):
     map = {k:v for k, v in zip(range(10), 10*[0])}
     map[i] = 1
 
     mappedY = trainY['label'].map(map).values
 
-    neural.append(NeuralNetwork(trainX, mappedY, n, it, validX))
+    neuralTemp, Jtemp = NeuralNetwork(trainX, mappedY, n, it, validX)
+    neural.append(neuralTemp)
+    J.append(Jtemp)
     print(i)
 
 results = []
 neural = np.asarray(neural).T
+neural = np.squeeze(neural)
+
+print(neural.shape)
+print(neural)
 for n in neural:
     results.append(np.argmax(n))
 
 print(np.asarray(results).shape)
 print(results)
 
+print("F1 Score: " + str(f1_score(validY['label'].values, results, average='micro')))
+print("Acuracy: " + str(accuracy_score(validY['label'].values, results)))
+
+"""
+
+#One vs all
+weights = []
+for i in range(10):
+    map = {k:v for k, v in zip(range(10), 10*[0])}
+    map[i] = 1
+
+    mappedY = trainY['label'].map(map).values
+
+    weights.append(NeuralNetwork(trainX, mappedY, n, it, validX))
+    print(i)
+
+
+weights = np.asarray(weights)
+P = sigmoid(validX.dot(weights.T))
+
+results = []
+print(weights.shape)
+for p in P:
+    results.append(np.argmax(p))
+
+print(np.asarray(results).shape)
+print(results)
+
 print("F1 Score:" + str(f1_score(validY['label'].values, results, average='micro')))
 print("Acuracy: " + str(accuracy_score(validY['label'].values, results)))
+"""
