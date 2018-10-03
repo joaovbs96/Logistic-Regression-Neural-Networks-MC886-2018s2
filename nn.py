@@ -23,7 +23,7 @@ def leaky_relu_derivative(z):
         else:
             return 0.01
 
-    relufunc = np.vectorize(do_leaky_deriv)
+    relufunc = np.vectorize(do_leaky)
     return relufunc(z)
 
 
@@ -88,20 +88,20 @@ def loss(h, y):
 
     return cost
 
-def NeuralNetwork(x, y, n, it, vx, func, func_deriv):
+def NeuralNetwork(x, y, n, it, vx):
     # step by step: check slide 68
     # step 1 - random init in [0, 1)
     y = np.reshape(y, (y.shape[0], 1))
 
-    weights1 = np.random.rand(n, n)
-    weights2 = np.random.rand(n, 1)
+    weights1 = np.random.rand(n, 64)
+    weights2 = np.random.rand(64, 10)
 
     J = []
     for i in range(it):
         print("Iteração: ", i)
         # step 2 - feed forward - slide 41 # TODO: outras funções de ativação
-        layer1 = func(np.dot(x, weights1)) # z = sig(W1x + b1)
-        output = func(np.dot(layer1, weights2)) # y = sig(W2sig(W1x + b1) + b2)
+        layer1 = relu(np.dot(x, weights1)) # z = sig(W1x + b1)
+        output = relu(np.dot(layer1, weights2)) # y = sig(W2sig(W1x + b1) + b2)
 
         # step 3 - calculate error
         J.append(loss(output, y))
@@ -110,19 +110,19 @@ def NeuralNetwork(x, y, n, it, vx, func, func_deriv):
         # 2(y - y') * z(1 - z) * x
         #temp = 2 * (y - output) * sigmoid_derivative(output)
         #d_weights2 = np.dot(layer1.T, temp)
-        d_weights2 = (y - output) * func_deriv(output)
+        d_weights2 = (y - output) * relu_derivative(output)
 
         #temp = np.dot(temp, weights2.T) * sigmoid_derivative(layer1)
         #d_weights1 = np.dot(x.T, temp)
-        d_weights1 = d_weights2.dot(weights2.T) * func_deriv(layer1)
+        d_weights1 = d_weights2.dot(weights2.T) * relu_derivative(layer1)
 
         # steps 5 & 6 - backprop & update the weights with the derivative cost function
         weights2 += layer1.T.dot(d_weights2) * 0.00001
         weights1 += x.T.dot(d_weights1) * 0.00001
 
     # calculte output value
-    layer1 = func(np.dot(vx, weights1))
-    output = func(np.dot(layer1, weights2))
+    layer1 = relu(np.dot(vx, weights1))
+    output = relu(np.dot(layer1, weights2))
 
     print(output)
 
@@ -159,10 +159,12 @@ trainX, validX = X[10000:], X[:10000]
 trainY, validY = Y.iloc[10000:], Y.iloc[:10000]
 
 # Scaler object
-scaler = MinMaxScaler(feature_range=(0, 1))    # Between 0 and 1
+#scaler = MinMaxScaler(feature_range=(0, 1))    # Between 0 and 1
 
-trainX = scaler.fit_transform(trainX)
-validX = scaler.transform(validX)
+#trainX = scaler.fit_transform(trainX)
+#validX = scaler.transform(validX)
+trainX /= 255.0
+validX /= 255.0
 
 # m -> number of observations
 # n -> number of features
@@ -170,34 +172,37 @@ _, n = trainX.shape
 it = 10
 
 #One vs all
-functions = [tanh, relu, leaky_relu, sigmoid]
-derivatives = [tanh_derivative, relu_derivative, leaky_relu_derivative, sigmoid_derivative]
-for function in zip(functions, derivatives):
-    func, func_deriv = function
 
-    neural, J =  [], []
-    for i in range(10):
-        map = {k:v for k, v in zip(range(10), 10*[0])}
-        map[i] = 1
+neural, J =  [], []
+for i in range(10):
+    map = {k:v for k, v in zip(range(10), 10*[0])}
+    map[i] = 1
 
-        mappedY = trainY['label'].map(map).values
+    mappedY = trainY['label'].map(map).values
 
-        neuralTemp, Jtemp = NeuralNetwork(trainX, mappedY, n, it, validX, func, func_deriv)
-        neural.append(neuralTemp)
-        J.append(Jtemp)
-        print(i)
+    neuralTemp, Jtemp = NeuralNetwork(trainX, mappedY, n, it, validX)
+    neural.append(neuralTemp)
+    J.append(Jtemp)
+    print(i)
 
-    results = []
-    neural = np.asarray(neural).T
-    neural = np.squeeze(neural)
+results = []
+neural = np.asarray(neural).T
+neural = np.squeeze(neural)
 
-    print(neural.shape)
-    print(neural)
-    for n in neural:
-        results.append(np.argmax(n))
+print(neural.shape)
+print(neural)
+for n in neural:
+    results.append(np.argmax(n))
 
-    print(np.asarray(results).shape)
-    print(results)
+print(np.asarray(results).shape)
+print(results)
 
-    print("F1 Score: " + str(f1_score(validY['label'].values, results, average='micro')))
-    print("Acuracy: " + str(accuracy_score(validY['label'].values, results)))
+print("F1 Score: " + str(f1_score(validY['label'].values, results, average='micro')))
+print("Acuracy: " + str(accuracy_score(validY['label'].values, results)))
+
+# plot graph for GD with regularization
+plt.plot(J)
+plt.ylabel('Função de custo J')
+plt.xlabel('Número de iterações')
+plt.title('Regressão Logistica Multinomial')
+plt.show()
