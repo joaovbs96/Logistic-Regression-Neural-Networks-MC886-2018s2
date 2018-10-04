@@ -13,32 +13,6 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
 
-
-# =========================================
-
-def leaky_relu_derivative(z):
-    def do_leaky_deriv(x):
-        if x > 0:
-            return 1
-        else:
-            return 0.01
-
-    relufunc = np.vectorize(do_leaky_deriv)
-    return relufunc(z)
-
-
-def leaky_relu(z):
-    def do_leaky(x):
-        if x > 0:
-            return x
-        else:
-            return 0.01 * x
-
-    relufunc = np.vectorize(do_leaky)
-    return relufunc(z)
-
-# =========================================
-
 def relu_derivative(z):
     def do_relu_deriv(x):
         if x > 0:
@@ -49,7 +23,6 @@ def relu_derivative(z):
     relufunc = np.vectorize(do_relu_deriv)
     return relufunc(z)
 
-
 def relu(z):
     maxValue = z.max()
     def do_relu(x):
@@ -58,32 +31,10 @@ def relu(z):
     relufunc = np.vectorize(do_relu)
     return relufunc(z)
 
-# =========================================
-
-def tanh_derivative(z):
-    return 1.0 - (tanh(z) * tanh(z))
-
-
-def tanh(z):
-    return (np.exp(z) - np.exp(-z)) / (np.exp(z) + np.exp(-z))
-
-# =========================================
-
-def sigmoid_derivative(z):
-    return z * (1.0 - z)
-
-
-def sigmoid(z):
-    return 1.0 / (1 + np.exp(-z))
-
-# =========================================
-
 def softmax(z):
     z -= np.max(z)
     sm = (np.exp(z).T / np.sum(np.exp(z),axis=1)).T
     return sm
-
-# =========================================
 
 
 def oneHotEncode(y, k):
@@ -127,8 +78,8 @@ def NeuralNetwork(x, y, n, it, vx, numberOfClasses):
         d_weights1 = d_weights2.dot(weights2.T) * relu_derivative(layer1)
 
         # steps 5 & 6 - backprop & update the weights with the derivative cost function
-        weights2 += layer1.T.dot(d_weights2) * 0.0001
-        weights1 += x.T.dot(d_weights1) * 0.0001
+        weights2 += layer1.T.dot(d_weights2) * 0.001
+        weights1 += x.T.dot(d_weights1) * 0.001
 
     # calculte output value
     layer1 = relu(np.dot(vx, weights1))
@@ -188,7 +139,7 @@ results = []
 for r in result:
     results.append(np.argmax(r))
 
-#print("iterações: ", str(it))
-#print("alpha: 0.0001")
+print("iterações: ", str(it))
+print("alpha: 0.001")
 print("F1 Score:" + str(f1_score(validY['label'].values, results, average='micro')))
 

@@ -12,6 +12,10 @@ from scipy import optimize as op
 from sklearn.metrics import f1_score
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import accuracy_score
+from sklearn.decomposition import PCA
+from sklearn.metrics import confusion_matrix
+import seaborn as sb
+
 
 #------------------------------------------------------#
 def oneHotEncode(y, k):
@@ -34,7 +38,7 @@ def loss(X, y, w):
     #Optimal theta
 def logisticRegressionMulticlass(X, y, w):
     alpha = 0.1
-    it = 10000
+    it = 1000
     J = np.zeros(it)
 
     for i in range(it):
@@ -56,23 +60,40 @@ pd.options.mode.chained_assignment = None  # default='warn'
 trainName = sys.argv[1]
 data = pd.read_csv(trainName)
 
-# separate target/classes from set
+# read test database
+filename = sys.argv[2]
+testData = pd.read_csv(filename)
+
+# separate target/classes from train set
 Y = data.drop(data.columns.values[1:], axis='columns')
 X = data.drop('label', axis='columns')
+
+# separate target/classes from test set
+testY = testData.drop(testData.columns.values[1:], axis='columns')
+testX = testData.drop('label', axis='columns')
 
 # split dataset into train and validation
 trainX, validX = X.iloc[12000:], X.iloc[:12000]
 trainY, validY = Y.iloc[12000:], Y.iloc[:12000]
 
+# Dimensionality reduction
+pca = PCA(.98)
+trainX = pca.fit_transform(trainX)
+validX = pca.transform(validX)
+testX = pca.transform(testX)
+
 # Scaler object
 scaler = MinMaxScaler(feature_range=(0, 1))    # Between 0 and 1
 
+# normalize train, validation ans test with data found in train
 trainX = scaler.fit_transform(trainX)
 validX = scaler.transform(validX)
+testX = scaler.transform(testX) 
 
 # insert bias after normalization
 trainX = np.insert(trainX, 0, 1, axis=1)
 validX = np.insert(validX, 0, 1, axis=1)
+testX  = np.insert(testX, 0, 1, axis=1)
 
 k = len(np.unique(trainY))
 
@@ -88,14 +109,23 @@ J, w = logisticRegressionMulticlass(trainX, y, w)
 plt.plot(J)
 plt.ylabel('Função de custo J')
 plt.xlabel('Número de iterações')
-plt.title('Regressão Logistica Multinomial')
+plt.title('Regressão Logistica Multinomial. Alpha = 0.1')
 plt.show()
 
 #Predictions
-P = softmax(validX.dot(w)) # probability of each class
+P = softmax(testX.dot(w)) # probability of each class
 
 results = []
 for p in P:
     results.append(np.argmax(p))
 
-print("F1 Score:" + str(f1_score(validY['label'].values, results, average='micro')))
+print("REGRESSÃO LOGISTICA MULTINOMIAL - ALPHA 0.1 - 1000 ITERAÇÕES")
+print("F1 Score:" + str(f1_score(testY['label'].values, results, average='micro')))
+
+cm = confusion_matrix(testY['label'].values, results)
+print(cm)
+
+classes = np.unique(trainY)
+heatMap = sb.heatmap(cm, cmap=sb.color_palette("Blues"))
+plt.title("Heat Map Regressão Logistica Multinomial")
+plt.show()
