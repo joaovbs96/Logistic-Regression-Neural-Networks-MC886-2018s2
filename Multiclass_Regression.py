@@ -102,8 +102,8 @@ w = np.ones([trainX.shape[1],numberOfClasses])
 # reduce 3d to 2d matrix
 y = np.squeeze(oneHotEncode(trainY, numberOfClasses))
 
-alpha = 0.1
 it = 1000
+alpha = 0.1
 
 # execute multinomial regression
 J, w = logisticRegressionMulticlass(trainX, y, w, it, alpha)
