@@ -13,33 +13,6 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
 
-
-# =========================================
-
-def leaky_relu_derivative(z):
-    def do_leaky_deriv(x):
-        if x > 0:
-            return 1
-        else:
-            return 0.01
-
-    relufunc = np.vectorize(do_leaky)
-    return relufunc(z)
-
-
-def leaky_relu(z):
-    maxValue = z.max()
-    def do_leaky(x):
-        if x > 0:
-            return x / maxValue
-        else:
-            return 0.01 * x / maxValue
-
-    relufunc = np.vectorize(do_leaky)
-    return relufunc(z)
-
-# =========================================
-
 def relu_derivative(z):
     def do_relu_deriv(x):
         if x > 0:
@@ -59,29 +32,10 @@ def relu(z):
     relufunc = np.vectorize(do_relu)
     return relufunc(z)
 
-# =========================================
-
-def tanh_derivative(z):
-    return 1.0 - (tanh(z) * tanh(z))
-
-
-def tanh(z):
-    return (np.exp(2*z) - 1) / (np.exp(2*z) + 1)
-
-# =========================================
-
-def sigmoid_derivative(z):
-    return z * (1.0 - z)
-
-
-def sigmoid(z):
-    return 1.0 / (1 + np.exp(-z))
-
-# =========================================
 
 def softmax(z):
     z -= np.max(z)
-    sm = (np.exp(z).T / (0.0001 + np.sum(np.exp(z),axis=1))).T
+    sm = (np.exp(z).T / np.sum(np.exp(z),axis=1)).T
     return sm
 
 def oneHotEncode(y, k):
@@ -117,12 +71,12 @@ def NeuralNetwork(x, y, it, alpha):
 
         # Second activation function
         # z2 = f(W2 * z1 + b2)
-        z2 = np.dot(z1, weights2)
+        z2 = np.dot(a1, weights2)
         a2 = relu(z2)
 
         # Third activation function(softmax)
         # z3 = softmax(W3 * z2 + b3)
-        z3 = np.dot(z2, weights3)
+        z3 = np.dot(a2, weights3)
         a3 = softmax(z3)
 
         # step 3 - calculate ouput error
@@ -132,18 +86,18 @@ def NeuralNetwork(x, y, it, alpha):
         # step 5 - backpropagate
         # step 6 - update the weights with the derivative cost function
         dz3 = (y - a3)
-        dw3 = a2.T.dot(dz3) * alpha
+        dw3 = a2.T.dot(dz3)
 
         dz2 = dz3.dot(weights3.T) * relu_derivative(a2)
-        dw2 = a1.T.dot(dz2) * alpha
+        dw2 = a1.T.dot(dz2)
 
         dz1 = dz2.dot(weights2.T) * relu_derivative(a1)
-        dw1 = x.T.dot(dz1) * alpha
+        dw1 = x.T.dot(dz1)
 
-        weights3 += dw3
-        weights2 += dw2
-        weights1 += dw1
-
+        weights3 += dw3 * alpha 
+        weights2 += dw2 * alpha 
+        weights1 += dw1 * alpha 
+    
     return [weights1, weights2, weights3], J
 
 
@@ -167,8 +121,8 @@ X = data.drop('label', axis='columns')
 X = PCA(.95).fit_transform(X)
 
 # split dataset into train and validation
-trainX, validX = X[10000:], X[:10000]
-trainY, validY = Y.iloc[10000:], Y.iloc[:10000]
+trainX, validX = X[12000:], X[:12000]
+trainY, validY = Y.iloc[12000:], Y.iloc[:12000]
 
 # normalization
 trainX /= 255.0
@@ -178,15 +132,15 @@ validX /= 255.0
 trainY = np.squeeze(oneHotEncode(trainY, len(np.unique(trainY))))
 
 # train neural network
-it = 2000
-alpha = 0.07
+it = 100
+alpha = 0.0001
 weights, J = NeuralNetwork(trainX, trainY, it, alpha)
 
 # plot graph for GD
 plt.plot(J)
 plt.ylabel('Função de custo J')
 plt.xlabel('Número de iterações')
-plt.title('Rede Neural com uma camada escondida')
+plt.title('Rede Neural com duas camadas escondidas')
 plt.show()
 
 # predict value with validation

@@ -16,22 +16,23 @@ from sklearn.metrics import confusion_matrix
 import seaborn as sb
 from sklearn.decomposition import PCA
 
-
+# sigmoid function
 def sigmoid(z):
     return 1.0 / (1 + np.exp(-z))
 
-# cost function
+# cost function and gradient descent
 def loss(theta, X, y):
     m = len(y)
     h = sigmoid(X.dot(theta))
 
+    # 0.001 was added to avoid cases where h == 0, because log(0) == nan
     cost = (1 / m) * np.sum((-y.T.dot(np.log(h + 0.001)) - (1 - y).T.dot(np.log(1 - h + 0.001))))
     gradient = ((1 / m) * X.T.dot(h - y))
 
     return cost, gradient
 
+# Perform trainining
 def logisticRegression(X, y, theta):
-
     alpha = 0.1
     it = 10000
     J = np.zeros(it)
@@ -98,6 +99,8 @@ all_theta = np.zeros((k, n))
 #One vs all
 J = []
 for i in range(10):
+    # transform tareget data into 0 or 1
+    # 1 for the class od interest and 0 for the others
     map = {k:v for k, v in zip(range(10), 10*[0])}
     map[i] = 1
 
@@ -129,12 +132,15 @@ plt.xlabel('Observação')
 plt.title('Predição vs Real')
 plt.show()"""
 
+# Accuracy
 print("REGRESSÃO LOGISTICA ONE-VS-ALL - ALPHA 0.1 - 1000 ITERAÇÕES")
 print("F1 Score:" + str(f1_score(testY['label'].values, results, average='micro')))
 
+# confusion matrix
 cm = confusion_matrix(testY['label'].values, results)
 print(cm)
 
+# Heat map
 classes = np.unique(trainY)
 heatMap = sb.heatmap(cm, cmap=sb.color_palette("Blues"))
 plt.title("Heat Map Regressão Logistica One vs All")

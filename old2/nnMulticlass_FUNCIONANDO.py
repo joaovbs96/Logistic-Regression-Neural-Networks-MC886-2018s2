@@ -78,28 +78,28 @@ def sigmoid(z):
 
 # =========================================
 
+def oneHotEncode(y, k):
+    return np.eye(k)[y]
+
 
 def loss(h, y):
     m = len(y)
 
     cost = (-1 / m) * np.sum(np.sum(y * np.log(h + 0.0001) + (1. - y) * np.log((1 - h) + 0.0001), axis=1))
 
-    print(cost)
-
     return cost
 
-def NeuralNetwork(x, y, n, it, vx):
+def NeuralNetwork(x, y, n, it, vx, numberOfClasses):
+    secondLayerSize = 64
+
     # step by step: check slide 68
     # step 1 - random init in [0, 1)
-    y = np.reshape(y, (y.shape[0], 1))
-
-    weights1 = np.random.rand(n, 64)
-    weights2 = np.random.rand(64, 10)
+    weights1 = np.random.rand(n, secondLayerSize)
+    weights2 = np.random.rand(secondLayerSize, numberOfClasses)
 
     J = []
     for i in range(it):
-        print("Iteração: ", i)
-        # step 2 - feed forward - slide 41 # TODO: outras funções de ativação
+        # step 2 - feed forward - slide 41
         layer1 = relu(np.dot(x, weights1)) # z = sig(W1x + b1)
         output = relu(np.dot(layer1, weights2)) # y = sig(W2sig(W1x + b1) + b2)
 
@@ -107,9 +107,7 @@ def NeuralNetwork(x, y, n, it, vx):
         J.append(loss(output, y))
 
         # step 4 - calculate derivative of error
-        # 2(y - y') * z(1 - z) * x
-        #temp = 2 * (y - output) * sigmoid_derivative(output)
-        #d_weights2 = np.dot(layer1.T, temp)
+        # (y - y') * z(1 - z) * x
         d_weights2 = (y - output) * relu_derivative(output)
 
         #temp = np.dot(temp, weights2.T) * sigmoid_derivative(layer1)
@@ -124,9 +122,8 @@ def NeuralNetwork(x, y, n, it, vx):
     layer1 = relu(np.dot(vx, weights1))
     output = relu(np.dot(layer1, weights2))
 
-    print(output)
-
     return output, J
+
 
 # MAIN
 
@@ -148,61 +145,36 @@ X = data.drop('label', axis='columns')
 pca = PCA(.95)
 X = pca.fit_transform(X)
 
-# insert bias
-#m, n = X.shape
-#temp = np.zeros((m, n + 1))
-#temp[:, :-1] = X
-#X = temp
-
 # split dataset into train and validation
 trainX, validX = X[10000:], X[:10000]
 trainY, validY = Y.iloc[10000:], Y.iloc[:10000]
 
-# Scaler object
-#scaler = MinMaxScaler(feature_range=(0, 1))    # Between 0 and 1
-
-#trainX = scaler.fit_transform(trainX)
-#validX = scaler.transform(validX)
+# normalization 
 trainX /= 255.0
 validX /= 255.0
 
 # m -> number of observations
 # n -> number of features
 _, n = trainX.shape
-it = 10
+it = 1000
 
-#One vs all
+numberOfClasses = len(np.unique(trainY))
 
-neural, J =  [], []
-for i in range(10):
-    map = {k:v for k, v in zip(range(10), 10*[0])}
-    map[i] = 1
+# reduce 3d to 2d matrix
+y = np.squeeze(oneHotEncode(trainY, numberOfClasses))
 
-    mappedY = trainY['label'].map(map).values
-
-    neuralTemp, Jtemp = NeuralNetwork(trainX, mappedY, n, it, validX)
-    neural.append(neuralTemp)
-    J.append(Jtemp)
-    print(i)
-
-results = []
-neural = np.asarray(neural).T
-neural = np.squeeze(neural)
-
-print(neural.shape)
-print(neural)
-for n in neural:
-    results.append(np.argmax(n))
-
-print(np.asarray(results).shape)
-print(results)
-
-print("F1 Score: " + str(f1_score(validY['label'].values, results, average='micro')))
-print("Acuracy: " + str(accuracy_score(validY['label'].values, results)))
+result, J = NeuralNetwork(trainX, y, n, it, validX, numberOfClasses)
 
 # plot graph for GD with regularization
 plt.plot(J)
 plt.ylabel('Função de custo J')
 plt.xlabel('Número de iterações')
-plt.title('Regressão Logistica Multinomial')
+plt.title('Rede Neural com uma camada escondida')
 plt.show()
+
+results = []
+for r in result:
+    results.append(np.argmax(r))
+
+print("F1 Score:" + str(f1_score(validY['label'].values, results, average='micro')))
+
