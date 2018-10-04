@@ -15,6 +15,29 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 import seaborn as sb
 
+# =========================================
+
+def leaky_relu_derivative(z):
+    def do_leaky_deriv(x):
+        if x > 0:
+            return 1
+        else:
+            return 0.01
+
+    relufunc = np.vectorize(do_leaky_deriv)
+    return relufunc(z)
+
+def leaky_relu(z):
+    def do_leaky(x):
+        if x > 0:
+            return x
+        else:
+            return 0.01 * x
+    relufunc = np.vectorize(do_leaky)
+    return relufunc(z)
+
+# =========================================
+
 def relu_derivative(z):
     def do_relu_deriv(x):
         if x > 0:
@@ -25,7 +48,6 @@ def relu_derivative(z):
     relufunc = np.vectorize(do_relu_deriv)
     return relufunc(z)
 
-
 def relu(z):
     maxValue = z.max()
     def do_relu(x):
@@ -34,6 +56,23 @@ def relu(z):
     relufunc = np.vectorize(do_relu)
     return relufunc(z)
 
+# =========================================
+
+def tanh_derivative(z):
+    return 1.0 - (tanh(z) * tanh(z))
+
+def tanh(z):
+    return (np.exp(z) - np.exp(-z)) / (np.exp(z) + np.exp(-z))
+
+# =========================================
+
+def sigmoid_derivative(z):
+    return z * (1.0 - z)
+
+def sigmoid(z):
+    return 1.0 / (1 + np.exp(-z))
+
+# =========================================
 
 def softmax(z):
     z -= np.max(z)
@@ -54,7 +93,7 @@ def loss(h, y):
 def NeuralNetwork(x, y, it, alpha):
     classes = len(y[0]) # number of classes
     _, n = x.shape # n: number of features
-    secondLayerSize = 128
+    secondLayerSize = 64
     thirdLayerSize = 64
 
     # step 1 - random init in [0, 1)
@@ -128,7 +167,7 @@ testY = testData.drop(testData.columns.values[1:], axis='columns')
 testX = testData.drop('label', axis='columns')
 
 # split dataset into train and validation
-trainX, validX = X[12000:], X[:12000]
+trainX, validX = X.iloc[12000:], X.iloc[:12000]
 trainY, validY = Y.iloc[12000:], Y.iloc[:12000]
 
 # Dimensionality reduction
@@ -147,7 +186,7 @@ trainY = np.squeeze(oneHotEncode(trainY, len(np.unique(trainY))))
 
 # train neural network
 it = 100
-alpha = 0.0001
+alpha = 0.0001 #0.0001
 weights, J = NeuralNetwork(trainX, trainY, it, alpha)
 
 # plot graph for GD
@@ -158,7 +197,7 @@ plt.title('Rede Neural com duas camadas escondidas')
 plt.show()
 
 # predict value with validation
-z1 = relu(np.dot(validX, weights[0]))
+z1 = relu(np.dot(testX, weights[0]))
 z2 = relu(np.dot(z1, weights[1]))
 results = softmax(np.dot(z2, weights[2]))
 
@@ -168,15 +207,15 @@ for r in results:
     yPred.append(np.argmax(r))
 
 # Accuracy
-print("REDE NEURAL COM 2 CAMADAs ESCONDIDAs - ALPHA 0.00001 - 1000 ITERAÇÕES")
-print("F1 Score:" + str(f1_score(validY['label'].values, yPred, average='micro')))
+print("REDE NEURAL COM 2 CAMADAs ESCONDIDAs - ALPHA 0.0001 - 100 ITERAÇÕES")
+print("F1 Score:" + str(f1_score(testY, yPred, average='micro')))
 
 # confusion matrix
-cm = confusion_matrix(testY['label'].values, results)
+cm = confusion_matrix(testY, yPred)
 print(cm)
 
 # Heat map
-classes = np.unique(trainY)
+classes = np.unique(testY)
 heatMap = sb.heatmap(cm, cmap=sb.color_palette("Blues"))
-plt.title("Heat Map Rede Neural 1 Camada Escondida")
+plt.title("Heat Map Rede Neural 2 Camadas Escondidas")
 plt.show()

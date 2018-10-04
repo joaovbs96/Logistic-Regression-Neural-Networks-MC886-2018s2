@@ -142,7 +142,7 @@ y = np.squeeze(oneHotEncode(trainY, len(np.unique(trainY))))
 
 # train neural network
 it = 100
-alpha = 0.0001
+alpha = 0.001
 weights, J = NeuralNetwork(trainX, y, it, alpha)
 
 # plot graph for GD with regularization
@@ -161,11 +161,11 @@ for r in results:
     yPred.append(np.argmax(r))
 
 # Accuracy
-print("REDE NEURAL COM 1 CAMADA ESCONDIDA - ALPHA 0.0001 - 1000 ITERAÇÕES")
-print("F1 Score:" + str(f1_score(testY['label'].values, yPred, average='micro')))
+print("REDE NEURAL COM 1 CAMADA ESCONDIDA - ALPHA 0.001 - 100 ITERAÇÕES")
+print("F1 Score:" + str(f1_score(testY, yPred, average='micro')))
 
 # confusion matrix
-cm = confusion_matrix(testY['label'].values, results)
+cm = confusion_matrix(testY, yPred)
 print(cm)
 
 # Heat map
