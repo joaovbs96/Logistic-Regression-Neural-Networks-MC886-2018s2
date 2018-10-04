@@ -12,6 +12,8 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.decomposition import PCA
 from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+import seaborn as sb
 
 def relu_derivative(z):
     def do_relu_deriv(x):
@@ -52,7 +54,7 @@ def loss(h, y):
 def NeuralNetwork(x, y, it, alpha):
     classes = len(y[0]) # number of classes
     _, n = x.shape # n: number of features
-    secondLayerSize = 64
+    secondLayerSize = 128
     thirdLayerSize = 64
 
     # step 1 - random init in [0, 1)
@@ -97,7 +99,7 @@ def NeuralNetwork(x, y, it, alpha):
         weights3 += dw3 * alpha 
         weights2 += dw2 * alpha 
         weights1 += dw1 * alpha 
-    
+
     return [weights1, weights2, weights3], J
 
 
@@ -113,22 +115,34 @@ pd.options.mode.chained_assignment = None  # default='warn'
 trainName = sys.argv[1]
 data = pd.read_csv(trainName)
 
+# read test database
+filename = sys.argv[2]
+testData = pd.read_csv(filename)
+
 # separate target/classes from set
 Y = data.drop(data.columns.values[1:], axis='columns')
 X = data.drop('label', axis='columns')
 
-# dimensionality reduction
-X = PCA(.95).fit_transform(X)
+# separate target/classes from test set
+testY = testData.drop(testData.columns.values[1:], axis='columns')
+testX = testData.drop('label', axis='columns')
 
 # split dataset into train and validation
 trainX, validX = X[12000:], X[:12000]
 trainY, validY = Y.iloc[12000:], Y.iloc[:12000]
 
-# normalization
+# Dimensionality reduction
+pca = PCA(.98)
+trainX = pca.fit_transform(trainX)
+validX = pca.transform(validX)
+testX = pca.transform(testX)
+
+# normalize train, validation ans test with the max value in the matrix - monocromatic images
 trainX /= 255.0
 validX /= 255.0
+testX /= 255.0
 
-# target HotEncode
+# target OndeHotEncode and reduction from 3d to 2d matrix
 trainY = np.squeeze(oneHotEncode(trainY, len(np.unique(trainY))))
 
 # train neural network
@@ -153,4 +167,16 @@ yPred = []
 for r in results:
     yPred.append(np.argmax(r))
 
+# Accuracy
+print("REDE NEURAL COM 2 CAMADAs ESCONDIDAs - ALPHA 0.00001 - 1000 ITERAÇÕES")
 print("F1 Score:" + str(f1_score(validY['label'].values, yPred, average='micro')))
+
+# confusion matrix
+cm = confusion_matrix(testY['label'].values, results)
+print(cm)
+
+# Heat map
+classes = np.unique(trainY)
+heatMap = sb.heatmap(cm, cmap=sb.color_palette("Blues"))
+plt.title("Heat Map Rede Neural 1 Camada Escondida")
+plt.show()
