@@ -12,33 +12,10 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.decomposition import PCA
 from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+import seaborn as sb
 
-
-# =========================================
-
-def leaky_relu_derivative(z):
-    def do_leaky_deriv(x):
-        if x > 0:
-            return 1
-        else:
-            return 0.01
-
-    relufunc = np.vectorize(do_leaky_deriv)
-    return relufunc(z)
-
-
-def leaky_relu(z):
-    def do_leaky(x):
-        if x > 0:
-            return x
-        else:
-            return 0.01 * x
-
-    relufunc = np.vectorize(do_leaky)
-    return relufunc(z)
-
-# =========================================
-
+# relu derivative function
 def relu_derivative(z):
     def do_relu_deriv(x):
         if x > 0:
@@ -49,7 +26,7 @@ def relu_derivative(z):
     relufunc = np.vectorize(do_relu_deriv)
     return relufunc(z)
 
-
+# relu function
 def relu(z):
     maxValue = z.max()
     def do_relu(x):
@@ -58,38 +35,17 @@ def relu(z):
     relufunc = np.vectorize(do_relu)
     return relufunc(z)
 
-# =========================================
-
-def tanh_derivative(z):
-    return 1.0 - (tanh(z) * tanh(z))
-
-
-def tanh(z):
-    return (np.exp(z) - np.exp(-z)) / (np.exp(z) + np.exp(-z))
-
-# =========================================
-
-def sigmoid_derivative(z):
-    return z * (1.0 - z)
-
-
-def sigmoid(z):
-    return 1.0 / (1 + np.exp(-z))
-
-# =========================================
-
+# Stable softmax function
 def softmax(z):
     z -= np.max(z)
     sm = (np.exp(z).T / np.sum(np.exp(z),axis=1)).T
     return sm
 
-# =========================================
-
-
+# Function to transform target data into one hot encode
 def oneHotEncode(y, k):
     return np.eye(k)[y]
 
-
+# calculate loss using cross entropy function
 def loss(h, y):
     m = len(y)
 
@@ -97,45 +53,50 @@ def loss(h, y):
 
     return cost
 
-def NeuralNetwork(x, y, n, it, vx, numberOfClasses):
-    secondLayerSize = 64
+# Train the neural network doing feed forward and backpropagation
+def NeuralNetwork(x, y, it, alpha):
+    classes = len(y[0]) # number of classes
+    _, n = x.shape # n: number of features
+
+    secondLayerSize = 64 # number of neurons in the second layer
 
     # step by step: check slide 68
     # step 1 - random init in [0, 1)
     weights1 = np.random.rand(n, secondLayerSize)
-    weights2 = np.random.rand(secondLayerSize, numberOfClasses)
+    weights2 = np.random.rand(secondLayerSize, classes)
 
     J = []
     for i in range(it):
+        print(i)
         # step 2 - feed forward - slide 41
 
-        # hidden layer with relu
-        layer1 = relu(np.dot(x, weights1)) # z = sig(W1x + b1)
+        # First activation function
+        # z1 = f(W1 * x + b1)
+        z1 = np.dot(x, weights1)
+        a1 = relu(z1) 
 
-        # output layer with softmax
-        output = softmax(np.dot(layer1, weights2)) # y = sig(W2sig(W1x + b1) + b2)
+        # Second activation function(softmax)
+        # z2 = softmax(W2 * z1 + b2)
+        z2 = np.dot(a1, weights2)
+        a2 = softmax(z2) 
 
-        # step 3 - calculate error
-        J.append(loss(output, y))
+        # step 3 - calculate output error
+        J.append(loss(a2, y))
 
         # step 4 - calculate derivative of error
-        # the last layer don't use activation function derivative
-        d_weights2 = (y - output)
+        # step 5 - backpropagate
+        # step 6 - update the weights with the derivative cost function
 
-        #temp = np.dot(temp, weights2.T) * sigmoid_derivative(layer1)
-        #d_weights1 = np.dot(x.T, temp)
-        d_weights1 = d_weights2.dot(weights2.T) * relu_derivative(layer1)
+        dz2 = (y - a2) # the last layer don't use activation function derivative
+        dw2 = a1.T.dot(dz2)
 
-        # steps 5 & 6 - backprop & update the weights with the derivative cost function
-        weights2 += layer1.T.dot(d_weights2) * 0.0001
-        weights1 += x.T.dot(d_weights1) * 0.0001
+        dz1 = dz2.dot(weights2.T) * relu_derivative(a1)
+        dw1 = x.T.dot(dz1)
 
-    # calculte output value
-    layer1 = relu(np.dot(vx, weights1))
-    output = softmax(np.dot(layer1, weights2))
-
-    return output, J
-
+        weights2 += dw2 * alpha
+        weights1 += dw1 * alpha
+    
+    return [weights1, weights2], J
 
 # MAIN
 
@@ -149,33 +110,40 @@ pd.options.mode.chained_assignment = None  # default='warn'
 trainName = sys.argv[1]
 data = pd.read_csv(trainName)
 
+# read test database
+filename = sys.argv[2]
+testData = pd.read_csv(filename)
+
 # separate target/classes from set
 Y = data.drop(data.columns.values[1:], axis='columns')
 X = data.drop('label', axis='columns')
 
-# redução de dimensionalidade
-pca = PCA(.95)
-X = pca.fit_transform(X)
+# separate target/classes from test set
+testY = testData.drop(testData.columns.values[1:], axis='columns')
+testX = testData.drop('label', axis='columns')
 
 # split dataset into train and validation
-trainX, validX = X[10000:], X[:10000]
-trainY, validY = Y.iloc[10000:], Y.iloc[:10000]
+trainX, validX = X.iloc[12000:], X.iloc[:12000]
+trainY, validY = Y.iloc[12000:], Y.iloc[:12000]
 
-# normalization 
+# Dimensionality reduction
+pca = PCA(.98)
+trainX = pca.fit_transform(trainX)
+validX = pca.transform(validX)
+testX = pca.transform(testX)
+
+# normalize train, validation ans test with the max value in the matrix - monocromatic images
 trainX /= 255.0
 validX /= 255.0
+testX /= 255.0
 
-# m -> number of observations
-# n -> number of features
-_, n = trainX.shape
+# target OndeHotEncode and reduction from 3d to 2d matrix
+y = np.squeeze(oneHotEncode(trainY, len(np.unique(trainY))))
+
+# train neural network
 it = 100
-
-numberOfClasses = len(np.unique(trainY))
-
-# reduce 3d to 2d matrix
-y = np.squeeze(oneHotEncode(trainY, numberOfClasses))
-
-result, J = NeuralNetwork(trainX, y, n, it, validX, numberOfClasses)
+alpha = 0.001
+weights, J = NeuralNetwork(trainX, y, it, alpha)
 
 # plot graph for GD with regularization
 plt.plot(J)
@@ -184,11 +152,25 @@ plt.xlabel('Número de iterações')
 plt.title('Rede Neural com uma camada escondida')
 plt.show()
 
-results = []
-for r in result:
-    results.append(np.argmax(r))
+# calculte output value
+z1 = relu(np.dot(testX, weights[0]))
+results = softmax(np.dot(z1, weights[1]))
 
-#print("iterações: ", str(it))
-#print("alpha: 0.0001")
-print("F1 Score:" + str(f1_score(validY['label'].values, results, average='micro')))
+yPred = []
+for r in results:
+    yPred.append(np.argmax(r))
+
+# Accuracy
+print("REDE NEURAL COM 1 CAMADA ESCONDIDA - ALPHA 0.001 - 100 ITERAÇÕES")
+print("F1 Score:" + str(f1_score(testY, yPred, average='micro')))
+
+# confusion matrix
+cm = confusion_matrix(testY, yPred)
+print(cm)
+
+# Heat map
+classes = np.unique(trainY)
+heatMap = sb.heatmap(cm, cmap=sb.color_palette("Blues"))
+plt.title("Heat Map Rede Neural 1 Camada Escondida")
+plt.show()
 
