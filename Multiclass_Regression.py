@@ -37,9 +37,7 @@ def loss(X, y, w):
     return cost, gradient
 
 # Perform training
-def logisticRegressionMulticlass(X, y, w):
-    alpha = 0.1
-    it = 1000
+def logisticRegressionMulticlass(X, y, w, it, alpha):
     J = np.zeros(it)
 
     for i in range(it):
@@ -104,8 +102,11 @@ w = np.ones([trainX.shape[1],numberOfClasses])
 # reduce 3d to 2d matrix
 y = np.squeeze(oneHotEncode(trainY, numberOfClasses))
 
+alpha = 0.1
+it = 1000
+
 # execute multinomial regression
-J, w = logisticRegressionMulticlass(trainX, y, w)
+J, w = logisticRegressionMulticlass(trainX, y, w, it, alpha)
 
 # plot graph for GD with regularization
 plt.plot(J)
@@ -123,7 +124,7 @@ resultsValid = []
 for p in PValid:
     resultsValid.append(np.argmax(p))
 
-print("VALIDAÇÃO ----> REGRESSÃO LOGISTICA MULTINOMIAL - ALPHA 0.1 - 1000 ITERAÇÕES")
+print("VALIDAÇÃO ----> REGRESSÃO LOGISTICA MULTINOMIAL - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
 print("F1 Score:" + str(f1_score(validY, resultsValid, average='micro')))
 
 # ============= TEST
@@ -136,7 +137,7 @@ for p in P:
     results.append(np.argmax(p))
 
 # Accuracy
-print("TESTE ----> REGRESSÃO LOGISTICA MULTINOMIAL - ALPHA 0.1 - 1000 ITERAÇÕES")
+print("TESTE ----> REGRESSÃO LOGISTICA MULTINOMIAL - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
 print("F1 Score:" + str(f1_score(testY, results, average='micro')))
 
 # confusion matrix

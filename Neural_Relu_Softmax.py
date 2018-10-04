@@ -162,7 +162,7 @@ for r in resultsValid:
     yPredValid.append(np.argmax(r))
 
 # Accuracy
-print("VALIDAÇÃO ----> REDE NEURAL COM 1 CAMADA ESCONDIDA - ALPHA 0.001 - 100 ITERAÇÕES")
+print("VALIDAÇÃO ----> REDE NEURAL COM 1 CAMADA ESCONDIDA - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
 print("F1 Score:" + str(f1_score(validY, yPredValid, average='micro')))
 
 # ============= TEST
@@ -176,7 +176,7 @@ for r in results:
     yPred.append(np.argmax(r))
 
 # Accuracy
-print("TESTE ----> REDE NEURAL COM 1 CAMADA ESCONDIDA - ALPHA 0.001 - 100 ITERAÇÕES")
+print("TESTE ----> REDE NEURAL COM 1 CAMADA ESCONDIDA - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
 print("F1 Score:" + str(f1_score(testY, yPred, average='micro')))
 
 # confusion matrix

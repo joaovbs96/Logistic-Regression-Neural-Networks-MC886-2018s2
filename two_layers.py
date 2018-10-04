@@ -185,7 +185,7 @@ testX /= 255.0
 trainY = np.squeeze(oneHotEncode(trainY, len(np.unique(trainY))))
 
 # train neural network
-it = 100
+it = 10
 alpha = 0.0001 #0.0001
 weights, J = NeuralNetwork(trainX, trainY, it, alpha)
 
@@ -208,7 +208,7 @@ for r in resultsValid:
     yPredValid.append(np.argmax(r))
 
 # Accuracy
-print("VALIDAÇÃO ----> REDE NEURAL COM 2 CAMADAS ESCONDIDAS - ALPHA 0.0001 - 100 ITERAÇÕES")
+print("VALIDAÇÃO ----> REDE NEURAL COM 2 CAMADAS ESCONDIDAS - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
 print("F1 Score:" + str(f1_score(validY, yPredValid, average='micro')))
 
 # ============= TEST
@@ -224,7 +224,7 @@ for r in results:
     yPred.append(np.argmax(r))
 
 # Accuracy
-print("TESTE ----> REDE NEURAL COM 2 CAMADAS ESCONDIDAS - ALPHA 0.0001 - 100 ITERAÇÕES")
+print("TESTE ----> REDE NEURAL COM 2 CAMADAS ESCONDIDAS - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
 print("F1 Score:" + str(f1_score(testY, yPred, average='micro')))
 
 # confusion matrix

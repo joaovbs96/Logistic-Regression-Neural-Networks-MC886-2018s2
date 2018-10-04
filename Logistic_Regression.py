@@ -32,9 +32,7 @@ def loss(theta, X, y):
     return cost, gradient
 
 # Perform trainining
-def logisticRegression(X, y, theta):
-    alpha = 0.1
-    it = 1000
+def logisticRegression(X, y, theta, it, alpha):
     J = np.zeros(it)
 
     for i in range(it):
@@ -93,6 +91,9 @@ testX  = np.insert(testX, 0, 1, axis=1)
 k = 10
 m, n = trainX.shape
 
+it = 1000
+alpha = 0.1
+
 #Training
 all_theta = np.zeros((k, n))
 
@@ -106,7 +107,7 @@ for i in range(10):
 
     mappedY = trainY['label'].map(map).values
 
-    J_it, optTheta = logisticRegression(trainX, mappedY,  np.zeros(n))
+    J_it, optTheta = logisticRegression(trainX, mappedY,  np.zeros(n), it, alpha)
     J.append(J_it)
     all_theta[i] = optTheta
 
@@ -127,7 +128,7 @@ resultsValid = []
 for p in PValid:
     resultsValid.append(np.argmax(p))
 
-print("VALIDAÇÃO ----> REGRESSÃO LOGISTICA ONE-VS-ALL - ALPHA 0.1 - 1000 ITERAÇÕES")
+print("VALIDAÇÃO ----> REGRESSÃO LOGISTICA ONE-VS-ALL - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
 print("F1 Score:" + str(f1_score(validY, resultsValid, average='micro')))
 
 # ============= TEST
@@ -147,7 +148,7 @@ plt.title('Predição vs Real')
 plt.show()"""
 
 # Accuracy
-print("REGRESSÃO LOGISTICA ONE-VS-ALL - ALPHA 0.1 - 1000 ITERAÇÕES")
+print("REGRESSÃO LOGISTICA ONE-VS-ALL - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
 print("F1 Score:" + str(f1_score(testY, results, average='micro')))
 
 # confusion matrix
