@@ -141,7 +141,7 @@ testX /= 255.0
 y = np.squeeze(oneHotEncode(trainY, len(np.unique(trainY))))
 
 # train neural network
-it = 100
+it = 1000
 alpha = 0.001
 weights, J = NeuralNetwork(trainX, y, it, alpha)
 
@@ -152,6 +152,21 @@ plt.xlabel('Número de iterações')
 plt.title('Rede Neural com uma camada escondida')
 plt.show()
 
+# ============== VALIDATION
+
+z1Valid = relu(np.dot(validX, weights[0]))
+resultsValid = softmax(np.dot(z1Valid, weights[1]))
+
+yPredValid = []
+for r in resultsValid:
+    yPredValid.append(np.argmax(r))
+
+# Accuracy
+print("VALIDAÇÃO ----> REDE NEURAL COM 1 CAMADA ESCONDIDA - ALPHA 0.001 - 100 ITERAÇÕES")
+print("F1 Score:" + str(f1_score(validY, yPredValid, average='micro')))
+
+# ============= TEST
+
 # calculte output value
 z1 = relu(np.dot(testX, weights[0]))
 results = softmax(np.dot(z1, weights[1]))
@@ -161,7 +176,7 @@ for r in results:
     yPred.append(np.argmax(r))
 
 # Accuracy
-print("REDE NEURAL COM 1 CAMADA ESCONDIDA - ALPHA 0.001 - 100 ITERAÇÕES")
+print("TESTE ----> REDE NEURAL COM 1 CAMADA ESCONDIDA - ALPHA 0.001 - 100 ITERAÇÕES")
 print("F1 Score:" + str(f1_score(testY, yPred, average='micro')))
 
 # confusion matrix
@@ -169,7 +184,7 @@ cm = confusion_matrix(testY, yPred)
 print(cm)
 
 # Heat map
-classes = np.unique(trainY)
+classes = np.unique(testY)
 heatMap = sb.heatmap(cm, cmap=sb.color_palette("Blues"))
 plt.title("Heat Map Rede Neural 1 Camada Escondida")
 plt.show()

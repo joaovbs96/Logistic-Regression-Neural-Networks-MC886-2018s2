@@ -196,6 +196,23 @@ plt.xlabel('Número de iterações')
 plt.title('Rede Neural com duas camadas escondidas')
 plt.show()
 
+# ============== VALIDATION
+
+# predict value with validation
+z1Valid = relu(np.dot(validX, weights[0]))
+z2Valid = relu(np.dot(z1Valid, weights[1]))
+resultsValid = softmax(np.dot(z2Valid, weights[2]))
+
+yPredValid = []
+for r in resultsValid:
+    yPredValid.append(np.argmax(r))
+
+# Accuracy
+print("VALIDAÇÃO ----> REDE NEURAL COM 2 CAMADAS ESCONDIDAS - ALPHA 0.0001 - 100 ITERAÇÕES")
+print("F1 Score:" + str(f1_score(validY, yPredValid, average='micro')))
+
+# ============= TEST
+
 # predict value with validation
 z1 = relu(np.dot(testX, weights[0]))
 z2 = relu(np.dot(z1, weights[1]))
@@ -207,7 +224,7 @@ for r in results:
     yPred.append(np.argmax(r))
 
 # Accuracy
-print("REDE NEURAL COM 2 CAMADAs ESCONDIDAs - ALPHA 0.0001 - 100 ITERAÇÕES")
+print("TESTE ----> REDE NEURAL COM 2 CAMADAS ESCONDIDAS - ALPHA 0.0001 - 100 ITERAÇÕES")
 print("F1 Score:" + str(f1_score(testY, yPred, average='micro')))
 
 # confusion matrix

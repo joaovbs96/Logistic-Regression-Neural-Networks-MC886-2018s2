@@ -114,6 +114,20 @@ plt.xlabel('Número de iterações')
 plt.title('Regressão Logistica Multinomial. Alpha = 0.1')
 plt.show()
 
+# ============== VALIDATION
+
+#Predictions
+PValid = softmax(validX.dot(w)) # probability of each class
+
+resultsValid = []
+for p in PValid:
+    resultsValid.append(np.argmax(p))
+
+print("VALIDAÇÃO ----> REGRESSÃO LOGISTICA MULTINOMIAL - ALPHA 0.1 - 1000 ITERAÇÕES")
+print("F1 Score:" + str(f1_score(validY, resultsValid, average='micro')))
+
+# ============= TEST
+
 #Predictions
 P = softmax(testX.dot(w)) # probability of each class
 
@@ -122,15 +136,15 @@ for p in P:
     results.append(np.argmax(p))
 
 # Accuracy
-print("REGRESSÃO LOGISTICA MULTINOMIAL - ALPHA 0.1 - 1000 ITERAÇÕES")
-print("F1 Score:" + str(f1_score(testY['label'].values, results, average='micro')))
+print("TESTE ----> REGRESSÃO LOGISTICA MULTINOMIAL - ALPHA 0.1 - 1000 ITERAÇÕES")
+print("F1 Score:" + str(f1_score(testY, results, average='micro')))
 
 # confusion matrix
-cm = confusion_matrix(testY['label'].values, results)
+cm = confusion_matrix(testY, results)
 print(cm)
 
 # Heat map
-classes = np.unique(trainY)
+classes = np.unique(testY)
 heatMap = sb.heatmap(cm, cmap=sb.color_palette("Blues"))
 plt.title("Heat Map Regressão Logistica Multinomial")
 plt.show()

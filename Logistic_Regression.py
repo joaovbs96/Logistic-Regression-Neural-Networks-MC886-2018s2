@@ -34,7 +34,7 @@ def loss(theta, X, y):
 # Perform trainining
 def logisticRegression(X, y, theta):
     alpha = 0.1
-    it = 10000
+    it = 1000
     J = np.zeros(it)
 
     for i in range(it):
@@ -118,6 +118,20 @@ for i in range(10):
 #plt.show()
 #
 
+# ============== VALIDATION
+
+#Predictions
+PValid = sigmoid(validX.dot(all_theta.T)) # probability of each class
+
+resultsValid = []
+for p in PValid:
+    resultsValid.append(np.argmax(p))
+
+print("VALIDAÇÃO ----> REGRESSÃO LOGISTICA ONE-VS-ALL - ALPHA 0.1 - 1000 ITERAÇÕES")
+print("F1 Score:" + str(f1_score(validY, resultsValid, average='micro')))
+
+# ============= TEST
+
 #Predictions
 P = sigmoid(testX.dot(all_theta.T)) # probability of each class
 
@@ -134,14 +148,14 @@ plt.show()"""
 
 # Accuracy
 print("REGRESSÃO LOGISTICA ONE-VS-ALL - ALPHA 0.1 - 1000 ITERAÇÕES")
-print("F1 Score:" + str(f1_score(testY['label'].values, results, average='micro')))
+print("F1 Score:" + str(f1_score(testY, results, average='micro')))
 
 # confusion matrix
-cm = confusion_matrix(testY['label'].values, results)
+cm = confusion_matrix(testY, results)
 print(cm)
 
 # Heat map
-classes = np.unique(trainY)
+classes = np.unique(testY)
 heatMap = sb.heatmap(cm, cmap=sb.color_palette("Blues"))
 plt.title("Heat Map Regressão Logistica One vs All")
 plt.show()
