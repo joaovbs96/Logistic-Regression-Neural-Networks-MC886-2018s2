@@ -3,7 +3,7 @@ Tamara Martinelli de Campos - RA157324
 
 MC886 2018 s2 - Assignment 2 - Logistic Regression & Neural Networks
 
-Cada modelo proposto nesse projeto foi implementado em seu próprio arquivo
+ - Cada modelo proposto nesse projeto foi implementado em seu próprio arquivo
 fonte, executados pelos seguintes comandos:
 
 # Regressão Logística One vs All:
@@ -17,3 +17,7 @@ python nnOneHiddenLayer.py [nome arquivo treino] [nome arquivo teste]
 
 # Rede Neural c/ Duas Camadas Escondidas
 python nnTwoHiddenLayer.py [nome arquivo treino] [nome arquivo teste]
+
+- Para gerar o heatmap, é necessário instalar a biblioteca seaborn, o que pode ser feito com os comandos:
+- - Python 2: pip install seaborn
+- - Python 3: pip3 install seaborn
