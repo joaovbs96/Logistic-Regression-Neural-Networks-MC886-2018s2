@@ -8,12 +8,48 @@ import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import itertools
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.decomposition import PCA
 from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 import seaborn as sb
+
+# source: http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
+def plot_confusion_matrix(cm, classes,
+                          normalize=False,
+                          title='Confusion matrix',
+                          cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    print(cm)
+
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.tight_layout()
 
 # =========================================
 
@@ -28,11 +64,12 @@ def leaky_relu_derivative(z):
     return relufunc(z)
 
 def leaky_relu(z):
+    maxValue = z.max()
     def do_leaky(x):
         if x > 0:
-            return x
+            return x / maxValue
         else:
-            return 0.01 * x
+            return 0.01 * x / maxValue
     relufunc = np.vectorize(do_leaky)
     return relufunc(z)
 
@@ -108,12 +145,12 @@ def NeuralNetwork(x, y, it, alpha):
         # First activation function
         # z1 = f(W1 * x + b1)
         z1 = np.dot(x, weights1)
-        a1 = relu(z1)
+        a1 = leaky_relu(z1)
 
         # Second activation function
         # z2 = f(W2 * z1 + b2)
         z2 = np.dot(a1, weights2)
-        a2 = relu(z2)
+        a2 = leaky_relu(z2)
 
         # Third activation function(softmax)
         # z3 = softmax(W3 * z2 + b3)
@@ -125,16 +162,16 @@ def NeuralNetwork(x, y, it, alpha):
 
         # step 4 - calculate derivative of error
         # step 5 - backpropagate
-        # step 6 - update the weights with the derivative cost function
         dz3 = (y - a3)
         dw3 = a2.T.dot(dz3)
 
-        dz2 = dz3.dot(weights3.T) * relu_derivative(a2)
+        dz2 = dz3.dot(weights3.T) * leaky_relu_derivative(a2)
         dw2 = a1.T.dot(dz2)
 
-        dz1 = dz2.dot(weights2.T) * relu_derivative(a1)
+        dz1 = dz2.dot(weights2.T) * leaky_relu_derivative(a1)
         dw1 = x.T.dot(dz1)
 
+        # step 6 - update the weights with the derivative cost function
         weights3 += dw3 * alpha
         weights2 += dw2 * alpha
         weights1 += dw1 * alpha
@@ -201,8 +238,8 @@ for alpha in alphas:
     # ============== VALIDATION
 
     # predict value with validation
-    z1Valid = relu(np.dot(validX, weights[0]))
-    z2Valid = relu(np.dot(z1Valid, weights[1]))
+    z1Valid = leaky_relu(np.dot(validX, weights[0]))
+    z2Valid = leaky_relu(np.dot(z1Valid, weights[1]))
     resultsValid = softmax(np.dot(z2Valid, weights[2]))
 
     yPredValid = []
@@ -216,8 +253,8 @@ for alpha in alphas:
     # ============= TEST
 
     # predict value with validation
-    z1 = relu(np.dot(testX, weights[0]))
-    z2 = relu(np.dot(z1, weights[1]))
+    z1 = leaky_relu(np.dot(testX, weights[0]))
+    z2 = leaky_relu(np.dot(z1, weights[1]))
     results = softmax(np.dot(z2, weights[2]))
 
     # get highest probability for each observation
@@ -231,10 +268,6 @@ for alpha in alphas:
 
     # confusion matrix
     cm = confusion_matrix(testY, yPred)
-    print(cm)
-
-    # Heat map
-    classes = np.unique(testY)
-    heatMap = sb.heatmap(cm, cmap=sb.color_palette("Blues"))
-    plt.title("Heat Map Rede Neural 2 Camadas Escondidas")
+    plt.figure()
+    plot_confusion_matrix(cm, classes=[str(i) for i in range(10)], normalize=False, title='Confusion Matrix')
     plt.show()
