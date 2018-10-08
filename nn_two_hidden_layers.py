@@ -135,9 +135,9 @@ def NeuralNetwork(x, y, it, alpha):
         dz1 = dz2.dot(weights2.T) * relu_derivative(a1)
         dw1 = x.T.dot(dz1)
 
-        weights3 += dw3 * alpha 
-        weights2 += dw2 * alpha 
-        weights1 += dw1 * alpha 
+        weights3 += dw3 * alpha
+        weights2 += dw2 * alpha
+        weights1 += dw1 * alpha
 
     return [weights1, weights2, weights3], J
 
@@ -185,54 +185,56 @@ testX /= 255.0
 trainY = np.squeeze(oneHotEncode(trainY, len(np.unique(trainY))))
 
 # train neural network
-it = 10
-alpha = 0.0001 #0.0001
-weights, J = NeuralNetwork(trainX, trainY, it, alpha)
+it = 1000
+alphas = [0.0001, 0.00001, 0.000001]
 
-# plot graph for GD
-plt.plot(J)
-plt.ylabel('Função de custo J')
-plt.xlabel('Número de iterações')
-plt.title('Rede Neural com duas camadas escondidas')
-plt.show()
+for alpha in alphas:
+    weights, J = NeuralNetwork(trainX, trainY, it, alpha)
 
-# ============== VALIDATION
+    # plot graph for GD
+    plt.plot(J)
+    plt.ylabel('Função de custo J')
+    plt.xlabel('Número de iterações')
+    plt.title('Rede Neural com duas camadas escondidas')
+    plt.show()
 
-# predict value with validation
-z1Valid = relu(np.dot(validX, weights[0]))
-z2Valid = relu(np.dot(z1Valid, weights[1]))
-resultsValid = softmax(np.dot(z2Valid, weights[2]))
+    # ============== VALIDATION
 
-yPredValid = []
-for r in resultsValid:
-    yPredValid.append(np.argmax(r))
+    # predict value with validation
+    z1Valid = relu(np.dot(validX, weights[0]))
+    z2Valid = relu(np.dot(z1Valid, weights[1]))
+    resultsValid = softmax(np.dot(z2Valid, weights[2]))
 
-# Accuracy
-print("VALIDAÇÃO ----> REDE NEURAL COM 2 CAMADAS ESCONDIDAS - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
-print("F1 Score:" + str(f1_score(validY, yPredValid, average='micro')))
+    yPredValid = []
+    for r in resultsValid:
+        yPredValid.append(np.argmax(r))
 
-# ============= TEST
+    # Accuracy
+    print("VALIDAÇÃO ----> REDE NEURAL COM 2 CAMADAS ESCONDIDAS - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
+    print("F1 Score:" + str(f1_score(validY, yPredValid, average='micro')))
 
-# predict value with validation
-z1 = relu(np.dot(testX, weights[0]))
-z2 = relu(np.dot(z1, weights[1]))
-results = softmax(np.dot(z2, weights[2]))
+    # ============= TEST
 
-# get highest probability for each observation
-yPred = []
-for r in results:
-    yPred.append(np.argmax(r))
+    # predict value with validation
+    z1 = relu(np.dot(testX, weights[0]))
+    z2 = relu(np.dot(z1, weights[1]))
+    results = softmax(np.dot(z2, weights[2]))
 
-# Accuracy
-print("TESTE ----> REDE NEURAL COM 2 CAMADAS ESCONDIDAS - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
-print("F1 Score:" + str(f1_score(testY, yPred, average='micro')))
+    # get highest probability for each observation
+    yPred = []
+    for r in results:
+        yPred.append(np.argmax(r))
 
-# confusion matrix
-cm = confusion_matrix(testY, yPred)
-print(cm)
+    # Accuracy
+    print("TESTE ----> REDE NEURAL COM 2 CAMADAS ESCONDIDAS - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
+    print("F1 Score:" + str(f1_score(testY, yPred, average='micro')))
 
-# Heat map
-classes = np.unique(testY)
-heatMap = sb.heatmap(cm, cmap=sb.color_palette("Blues"))
-plt.title("Heat Map Rede Neural 2 Camadas Escondidas")
-plt.show()
+    # confusion matrix
+    cm = confusion_matrix(testY, yPred)
+    print(cm)
+
+    # Heat map
+    classes = np.unique(testY)
+    heatMap = sb.heatmap(cm, cmap=sb.color_palette("Blues"))
+    plt.title("Heat Map Rede Neural 2 Camadas Escondidas")
+    plt.show()

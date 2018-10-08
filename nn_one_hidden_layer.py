@@ -28,9 +28,8 @@ def relu_derivative(z):
 
 # relu function
 def relu(z):
-    maxValue = z.max()
     def do_relu(x):
-        return max(0, x) / maxValue
+        return max(0, x)
 
     relufunc = np.vectorize(do_relu)
     return relufunc(z)
@@ -73,12 +72,17 @@ def NeuralNetwork(x, y, it, alpha):
         # First activation function
         # z1 = f(W1 * x + b1)
         z1 = np.dot(x, weights1)
-        a1 = relu(z1) 
+        a1 = relu(z1)
+
+        print(a1.shape)
+        sys.exit(0)
 
         # Second activation function(softmax)
         # z2 = softmax(W2 * z1 + b2)
         z2 = np.dot(a1, weights2)
-        a2 = softmax(z2) 
+        a2 = softmax(z2)
+
+        print(a2)
 
         # step 3 - calculate output error
         J.append(loss(a2, y))
@@ -95,7 +99,7 @@ def NeuralNetwork(x, y, it, alpha):
 
         weights2 += dw2 * alpha
         weights1 += dw1 * alpha
-    
+
     return [weights1, weights2], J
 
 # MAIN
@@ -142,50 +146,51 @@ y = np.squeeze(oneHotEncode(trainY, len(np.unique(trainY))))
 
 # train neural network
 it = 1000
-alpha = 0.001
-weights, J = NeuralNetwork(trainX, y, it, alpha)
+alphas = [0.0001]
 
-# plot graph for GD with regularization
-plt.plot(J)
-plt.ylabel('Função de custo J')
-plt.xlabel('Número de iterações')
-plt.title('Rede Neural com uma camada escondida')
-plt.show()
+for alpha in alphas:
+    weights, J = NeuralNetwork(trainX, y, it, alpha)
 
-# ============== VALIDATION
+    # plot graph for GD with regularization
+    plt.plot(J)
+    plt.ylabel('Função de custo J')
+    plt.xlabel('Número de iterações')
+    plt.title('Rede Neural com uma camada escondida')
+    plt.show()
 
-z1Valid = relu(np.dot(validX, weights[0]))
-resultsValid = softmax(np.dot(z1Valid, weights[1]))
+    # ============== VALIDATION
 
-yPredValid = []
-for r in resultsValid:
-    yPredValid.append(np.argmax(r))
+    z1Valid = relu(np.dot(validX, weights[0]))
+    resultsValid = softmax(np.dot(z1Valid, weights[1]))
 
-# Accuracy
-print("VALIDAÇÃO ----> REDE NEURAL COM 1 CAMADA ESCONDIDA - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
-print("F1 Score:" + str(f1_score(validY, yPredValid, average='micro')))
+    yPredValid = []
+    for r in resultsValid:
+        yPredValid.append(np.argmax(r))
 
-# ============= TEST
+    # Accuracy
+    print("VALIDAÇÃO ----> REDE NEURAL COM 1 CAMADA ESCONDIDA - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
+    print("F1 Score:" + str(f1_score(validY, yPredValid, average='micro')))
 
-# calculte output value
-z1 = relu(np.dot(testX, weights[0]))
-results = softmax(np.dot(z1, weights[1]))
+    # ============= TEST
 
-yPred = []
-for r in results:
-    yPred.append(np.argmax(r))
+    # calculte output value
+    z1 = relu(np.dot(testX, weights[0]))
+    results = softmax(np.dot(z1, weights[1]))
 
-# Accuracy
-print("TESTE ----> REDE NEURAL COM 1 CAMADA ESCONDIDA - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
-print("F1 Score:" + str(f1_score(testY, yPred, average='micro')))
+    yPred = []
+    for r in results:
+        yPred.append(np.argmax(r))
 
-# confusion matrix
-cm = confusion_matrix(testY, yPred)
-print(cm)
+    # Accuracy
+    print("TESTE ----> REDE NEURAL COM 1 CAMADA ESCONDIDA - ALPHA", str(alpha), " - ", str(it), " ITERAÇÕES")
+    print("F1 Score:" + str(f1_score(testY, yPred, average='micro')))
 
-# Heat map
-classes = np.unique(testY)
-heatMap = sb.heatmap(cm, cmap=sb.color_palette("Blues"))
-plt.title("Heat Map Rede Neural 1 Camada Escondida")
-plt.show()
+    # confusion matrix
+    cm = confusion_matrix(testY, yPred)
+    print(cm)
 
+    # Heat map
+    classes = np.unique(testY)
+    heatMap = sb.heatmap(cm, cmap=sb.color_palette("Blues"))
+    plt.title("Heat Map Rede Neural 1 Camada Escondida")
+    plt.show()
