@@ -1,6 +1,6 @@
 # coding: utf-8
 
-# MC886/MO444 - 2018s2 - Assignment 02 - Neural Network w/ One Hidden Layer
+# MC886/MO444 - 2018s2 - Assignment 02 - Neural Network with Two Hidden Layers
 # Tamara Campos - RA 157324
 # João Vítor B. Silva - RA 155951
 
@@ -12,7 +12,6 @@ import itertools
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.decomposition import PCA
 from sklearn.metrics import f1_score
-from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 
 # source: http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
@@ -98,7 +97,7 @@ def tanh_derivative(z):
     return 1.0 - (tanh(z) * tanh(z))
 
 def tanh(z):
-    return (np.exp(z) - np.exp(-z)) / (np.exp(z) + np.exp(-z))
+    return np.tanh(z)
 
 # =========================================
 
@@ -139,7 +138,6 @@ def NeuralNetwork(x, y, it, alpha):
 
     J = []
     for i in range(it):
-        print(i)
         # step 2 - feed forward
         # First activation function
         # z1 = f(W1 * x + b1)
@@ -222,7 +220,8 @@ trainY = np.squeeze(oneHotEncode(trainY, len(np.unique(trainY))))
 
 # train neural network
 it = 1000
-alphas = [0.0001, 0.00001, 0.000001]
+# tested alphas: 0.0001, 0.00001, 0.000001 - Better: 0.0001
+alphas = [0.0001]
 
 for alpha in alphas:
     weights, J = NeuralNetwork(trainX, trainY, it, alpha)

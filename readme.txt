@@ -16,4 +16,8 @@ python multinomial.py [nome arquivo treino] [nome arquivo teste]
 python nnOneHiddenLayer.py [nome arquivo treino] [nome arquivo teste]
 
 # Rede Neural c/ Duas Camadas Escondidas
-python nnTwoHiddenLayer.py [nome arquivo treino] [nome arquivo teste]
+python nnTwoHiddenLayers.py [nome arquivo treino] [nome arquivo teste]
+
+- Efetuar o download do arquivo da base de dados, indicada no link do Dropbox fornecido no enunciado e replicado a seguir, e extrair na mesma pasta dos códigos fonte.
+
+https://www.dropbox.com/s/qawunrav8ri0sp4/fashion-mnist-dataset.zip
