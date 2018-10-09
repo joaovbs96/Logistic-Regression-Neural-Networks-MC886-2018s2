@@ -17,7 +17,3 @@ python nnOneHiddenLayer.py [nome arquivo treino] [nome arquivo teste]
 
 # Rede Neural c/ Duas Camadas Escondidas
 python nnTwoHiddenLayer.py [nome arquivo treino] [nome arquivo teste]
-
-- Para gerar o heatmap, é necessário instalar a biblioteca seaborn, o que pode ser feito com os comandos:
-- - Python 2: pip install seaborn
-- - Python 3: pip3 install seaborn
